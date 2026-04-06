@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WiFi 위치 추적 대시보드</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Noto Sans KR', sans-serif;
+      background: #0a0e17;
+      color: #e0e6f0;
+      min-height: 100vh;
+    }
+
+    .header {
+      background: rgba(10, 14, 23, 0.95);
+      border-bottom: 1px solid rgba(0, 115, 230, 0.2);
+      padding: 16px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      backdrop-filter: blur(8px);
+    }
+
+    .header h1 {
+      font-size: 18px;
+      font-weight: 700;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .header h1 .dot {
+      width: 10px; height: 10px;
+      background: #00e676;
+      border-radius: 50%;
+      animation: pulse-dot 2s infinite;
+    }
+
+    @keyframes pulse-dot {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+
+    .header-info {
+      display: flex;
+      gap: 24px;
+      font-size: 13px;
+      color: #8892a4;
+    }
+
+    .header-info span strong {
+      color: #0073E6;
+    }
+
+    .dashboard {
+      display: grid;
+      grid-template-columns: 1fr 320px;
+      gap: 20px;
+      padding: 20px;
+      height: calc(100vh - 68px);
+    }
+
+    /* Map Area */
+    .map-container {
+      background: #111827;
+      border-radius: 16px;
+      border: 1px solid rgba(0, 115, 230, 0.15);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .map-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .map-header h2 {
+      font-size: 15px;
+      font-weight: 600;
+    }
+
+    .map-header .env-name {
+      font-size: 12px;
+      color: #8892a4;
+      background: rgba(0, 115, 230, 0.1);
+      padding: 4px 10px;
+      border-radius: 12px;
+    }
+
+    .map-canvas-wrap {
+      position: relative;
+      width: 100%;
+      height: calc(100% - 56px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    canvas#trackingMap {
+      max-width: 95%;
+      max-height: 95%;
+    }
+
+    /* Side Panel */
+    .side-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      overflow-y: auto;
+    }
+
+    .card {
+      background: #111827;
+      border-radius: 16px;
+      border: 1px solid rgba(0, 115, 230, 0.12);
+      overflow: hidden;
+    }
+
+    .card-header {
+      padding: 14px 18px;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+      font-size: 13px;
+      font-weight: 700;
+      color: #8892a4;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .card-body {
+      padding: 16px 18px;
+    }
+
+    /* Position Info */
+    .pos-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .pos-item {
+      background: rgba(0, 115, 230, 0.06);
+      border-radius: 10px;
+      padding: 12px;
+      text-align: center;
+    }
+
+    .pos-item .label {
+      font-size: 11px;
+      color: #6b7589;
+      margin-bottom: 4px;
+    }
+
+    .pos-item .value {
+      font-size: 22px;
+      font-weight: 700;
+      color: #0073E6;
+    }
+
+    .pos-item .unit {
+      font-size: 12px;
+      color: #6b7589;
+      margin-left: 2px;
+    }
+
+    /* AP Signals */
+    .ap-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .ap-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .ap-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .ap-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .ap-name {
+      font-size: 12px;
+      font-weight: 600;
+      color: #e0e6f0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .ap-detail {
+      font-size: 11px;
+      color: #6b7589;
+    }
+
+    .ap-rssi {
+      font-size: 13px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    /* Signal strength colors */
+    .signal-strong { color: #00e676; }
+    .signal-medium { color: #ffab00; }
+    .signal-weak { color: #ff5252; }
+
+    .rssi-bar {
+      width: 60px;
+      height: 4px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 2px;
+      overflow: hidden;
+      margin-top: 3px;
+    }
+
+    .rssi-bar-fill {
+      height: 100%;
+      border-radius: 2px;
+      transition: width 0.3s;
+    }
+
+    /* Controls */
+    .controls {
+      display: flex;
+      gap: 8px;
+    }
+
+    .ctrl-btn {
+      flex: 1;
+      padding: 10px;
+      font-size: 12px;
+      font-weight: 600;
+      border: 1px solid rgba(0, 115, 230, 0.3);
+      border-radius: 8px;
+      background: rgba(0, 115, 230, 0.08);
+      color: #0073E6;
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.2s;
+    }
+
+    .ctrl-btn:hover {
+      background: rgba(0, 115, 230, 0.15);
+    }
+
+    .ctrl-btn.danger {
+      border-color: rgba(255, 82, 82, 0.3);
+      background: rgba(255, 82, 82, 0.08);
+      color: #ff5252;
+    }
+
+    .ctrl-btn.danger:hover {
+      background: rgba(255, 82, 82, 0.15);
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .dashboard {
+        grid-template-columns: 1fr;
+        height: auto;
+      }
+      .map-container {
+        height: 50vh;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <h1><span class="dot"></span> WiFi 위치 추적</h1>
+    <div class="header-info">
+      <span>갱신: <strong id="updateRate">-</strong></span>
+      <span>AP: <strong id="apCount">0</strong>개</span>
+      <span>속도: <strong id="speed">0</strong> m/s</span>
+    </div>
+  </header>
+
+  <div class="dashboard">
+    <!-- Map -->
+    <div class="map-container">
+      <div class="map-header">
+        <h2>실시간 위치 맵</h2>
+        <span class="env-name" id="envName">-</span>
+      </div>
+      <div class="map-canvas-wrap">
+        <canvas id="trackingMap" width="800" height="540"></canvas>
+      </div>
+    </div>
+
+    <!-- Side Panel -->
+    <div class="side-panel">
+      <!-- Position -->
+      <div class="card">
+        <div class="card-header">현재 위치</div>
+        <div class="card-body">
+          <div class="pos-grid">
+            <div class="pos-item">
+              <div class="label">X 좌표</div>
+              <div class="value" id="posX">-<span class="unit">m</span></div>
+            </div>
+            <div class="pos-item">
+              <div class="label">Y 좌표</div>
+              <div class="value" id="posY">-<span class="unit">m</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- AP Signals -->
+      <div class="card">
+        <div class="card-header">AP 신호</div>
+        <div class="card-body">
+          <div class="ap-list" id="apList">
+            <div style="color:#6b7589;font-size:13px;text-align:center;padding:20px;">
+              데이터 수신 대기 중...
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Controls -->
+      <div class="card">
+        <div class="card-header">제어</div>
+        <div class="card-body">
+          <div class="controls">
+            <button class="ctrl-btn" id="toggleTrail">궤적 표시</button>
+            <button class="ctrl-btn danger" id="resetBtn">초기화</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="tracker.js"></script>
+</body>
+</html>

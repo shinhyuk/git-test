@@ -1,0 +1,57 @@
+{
+  "environment": {
+    "name": "사무실 1층",
+    "width": 30.0,
+    "height": 20.0,
+    "unit": "meters"
+  },
+  "access_points": [
+    {
+      "bssid": "AA:BB:CC:DD:EE:01",
+      "ssid": "Office_AP_1",
+      "x": 0.0,
+      "y": 0.0,
+      "tx_power": -30,
+      "frequency": 2.4
+    },
+    {
+      "bssid": "AA:BB:CC:DD:EE:02",
+      "ssid": "Office_AP_2",
+      "x": 30.0,
+      "y": 0.0,
+      "tx_power": -30,
+      "frequency": 2.4
+    },
+    {
+      "bssid": "AA:BB:CC:DD:EE:03",
+      "ssid": "Office_AP_3",
+      "x": 15.0,
+      "y": 20.0,
+      "tx_power": -30,
+      "frequency": 2.4
+    },
+    {
+      "bssid": "AA:BB:CC:DD:EE:04",
+      "ssid": "Office_AP_4",
+      "x": 0.0,
+      "y": 20.0,
+      "tx_power": -30,
+      "frequency": 5.0
+    }
+  ],
+  "path_loss": {
+    "reference_distance": 1.0,
+    "path_loss_exponent": 2.7,
+    "reference_rssi": -30
+  },
+  "tracking": {
+    "scan_interval": 1.0,
+    "min_ap_count": 3,
+    "kalman_process_noise": 0.1,
+    "kalman_measurement_noise": 2.0
+  },
+  "server": {
+    "host": "0.0.0.0",
+    "port": 5000
+  }
+}
